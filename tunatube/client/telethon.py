@@ -1,4 +1,5 @@
 from telethon import TelegramClient
+from tunatube.utils.video import *
 
 
 class TunaTubeClient:
@@ -33,6 +34,9 @@ class TunaTubeClient:
         if not self.is_active():
             await self.connect()
 
+        video_metadata = get_file_attributes(path)
+        thumb = get_file_thumb(path)
+
         return await self.client.send_file(
             chat_id,
             path,
@@ -40,4 +44,6 @@ class TunaTubeClient:
             caption=caption,
             force_document=False,
             allow_cache=False,
+            attributes=video_metadata,
+            thumb=thumb
         )
