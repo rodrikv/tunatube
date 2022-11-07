@@ -39,5 +39,4 @@ class TunaTubeClient:
             reply_to=reply_to_message,
             force_document=False,
             allow_cache=False,
-            thumb=thumb
         )
