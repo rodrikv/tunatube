@@ -28,7 +28,6 @@ class TunaTubeClient:
         path: str,
         caption: str,
         reply_to_message: int,
-        parse_mode: str,
         thumb: str = None
     ):
         if not self.is_active():
