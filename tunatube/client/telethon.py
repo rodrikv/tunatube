@@ -36,7 +36,6 @@ class TunaTubeClient:
         return await self.client.send_file(
             chat_id,
             path,
-            caption=caption,
             reply_to=reply_to_message,
             force_document=False,
             allow_cache=False,
