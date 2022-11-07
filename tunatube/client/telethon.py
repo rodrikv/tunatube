@@ -11,7 +11,7 @@ class TunaTubeClient:
 
     async def connect(self):
         self.client = TelegramClient(self.__session, self.__api_id, self.__api_hash)
-        self.client.parse_mode("html")
+        self.client.parse_mode = "html"
         await self.client.start(bot_token=self.__bot_token)
 
     async def stop(self):
