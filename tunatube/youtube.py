@@ -22,7 +22,7 @@ class YouTubeDescription:
             "views": self.views,
             "description": self.description,
             "rating": self.rating,
-            "publish_date": str(self.publish_date)
+            "publish_date": str(self.publish_date),
         }
 
 
@@ -58,3 +58,25 @@ class TunaTube:
             publish_date=self.__yt.publish_date,
             rating=self.__yt.rating,
         )
+
+    def download_hr(
+        self,
+        output_path: str = None,
+        filename: str = None,
+        filename_prefix: str = None,
+        skip_existing: bool = True,
+        timeout: int = None,
+        max_retries: int = 0,
+    ):
+        hr = self.streams.get_highest_resolution()
+        path = None
+        if hr:
+            path = hr.download(
+                output_path,
+                filename,
+                filename_prefix,
+                skip_existing,
+                timeout,
+                max_retries,
+            )
+        return path

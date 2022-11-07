@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import logging
+from tunatube.client.telethon import TunaTubeClient
 from tunatube.youtube import TunaTube, YouTubeDescription
 from tunatube.utils.date import uploaded_at
 
@@ -31,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 class TunaTubeBot:
+    client: TunaTubeClient = None
+
     def __init__(self, token):
         self.TOKEN = token
 
@@ -63,12 +66,40 @@ class TunaTubeBot:
 
         tt = TunaTube(update.message.text)
 
-        response_text = GenericMessages.youtube_description(tt.description)
+        download_path = tt.download_hr("./downloads")
+
+        if download_path:
+            await update.message.reply_text(
+                text=f"saved to file: {download_path}"
+            )
+        else:
+            return await update.message.reply_text(
+                text="Couldn't find the highest resolution :("
+            )
 
         await context.bot.delete_message(
             message.chat_id,
             message.id
         )
+
+        response_text = GenericMessages.youtube_description(tt.description)
+
+        try:
+            await update.message.reply_text(
+                text=f"sending video please wait..."
+            )
+
+            video_message = await self.client.send_file(
+                update.message.chat_id,
+                download_path,
+                caption=response_text,
+                reply_to_message=update.message.id,
+                parse_mode=response_text.parse_mode,
+            )
+        except Exception as e:
+            return await update.message.reply_text(
+                text=f"something bad happend couldn't send file!!!\nErrorMessage: {e}"
+            )
 
         await context.bot.send_photo(
             chat_id=update.message.chat_id,
