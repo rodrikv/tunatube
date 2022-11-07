@@ -12,7 +12,6 @@ class TunaTubeClient:
     async def connect(self):
         self.client = TelegramClient(self.__session, self.__api_id, self.__api_hash)
         await self.client.start(bot_token=self.__bot_token)
-        await self.client.connect()
 
     async def stop(self):
         if self.client:
@@ -29,6 +28,7 @@ class TunaTubeClient:
         caption: str,
         reply_to_message: int,
         parse_mode: str,
+        thumb: str = None
     ):
         if not self.is_active():
             await self.connect()
@@ -39,4 +39,7 @@ class TunaTubeClient:
             caption=caption,
             reply_to=reply_to_message,
             parse_mode=parse_mode,
+            force_document=False,
+            allow_cache=False,
+            thumb=thumb
         )

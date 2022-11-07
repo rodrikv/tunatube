@@ -1,5 +1,8 @@
-from dataclasses import dataclass
+import os
 import logging
+
+
+from dataclasses import dataclass
 from tunatube.client.telethon import TunaTubeClient
 from tunatube.youtube import TunaTube, YouTubeDescription
 from tunatube.utils.date import uploaded_at
@@ -61,7 +64,7 @@ class TunaTubeBot:
         message = await context.bot.send_message(
             update.message.chat.id,
             text="Sending youtube video description\nPlease wait...",
-            reply_to_message_id=update.message.id
+            reply_to_message_id=update.message.id,
         )
 
         tt = TunaTube(update.message.text)
@@ -69,25 +72,18 @@ class TunaTubeBot:
         download_path = tt.download_hr("./downloads")
 
         if download_path:
-            await update.message.reply_text(
-                text=f"saved to file: {download_path}"
-            )
+            await update.message.reply_text(text=f"saved to file: {download_path}")
         else:
             return await update.message.reply_text(
                 text="Couldn't find the highest resolution :("
             )
 
-        await context.bot.delete_message(
-            message.chat_id,
-            message.id
-        )
+        await context.bot.delete_message(message.chat_id, message.id)
 
         response_text = GenericMessages.youtube_description(tt.description)
 
         try:
-            await update.message.reply_text(
-                text=f"sending video please wait..."
-            )
+            await update.message.reply_text(text=f"sending video please wait...")
 
             video_message = await self.client.send_file(
                 update.message.chat_id,
@@ -95,19 +91,14 @@ class TunaTubeBot:
                 caption=response_text,
                 reply_to_message=update.message.id,
                 parse_mode=response_text.parse_mode,
+                thumb=tt.thumbnail_url,
             )
+
+            os.remove(download_path)
         except Exception as e:
             return await update.message.reply_text(
                 text=f"something bad happend couldn't send file!!!\nErrorMessage: {e}"
             )
-
-        await context.bot.send_photo(
-            chat_id=update.message.chat_id,
-            photo=tt.thumbnail_url,
-            caption=response_text.text,
-            reply_to_message_id=update.message.id,
-            parse_mode=response_text.parse_mode,
-        )
 
 
 @dataclass
