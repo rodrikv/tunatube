@@ -85,12 +85,11 @@ class TunaTubeBot:
         try:
             await update.message.reply_text(text=f"sending video please wait...")
 
-            video_message = await self.client.send_file(
+            await self.client.send_file(
                 update.message.chat_id,
                 download_path,
                 caption=response_text,
                 reply_to_message=update.message.id,
-                parse_mode=response_text.parse_mode,
                 thumb=tt.thumbnail_url,
             )
 
