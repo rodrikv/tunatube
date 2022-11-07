@@ -1,0 +1,7 @@
+services:
+  bot:
+    build: .
+    volumes:
+      - .:/code
+    env_file: .env
+    restart: always
