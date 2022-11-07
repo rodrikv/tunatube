@@ -71,9 +71,7 @@ class TunaTubeBot:
 
         download_path = tt.download_hr("./downloads")
 
-        if download_path:
-            await update.message.reply_text(text=f"saved to file: {download_path}")
-        else:
+        if not download_path:
             return await update.message.reply_text(
                 text="Couldn't find the highest resolution :("
             )
