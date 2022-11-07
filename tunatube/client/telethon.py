@@ -37,6 +37,7 @@ class TunaTubeClient:
             chat_id,
             path,
             reply_to=reply_to_message,
+            caption=caption,
             force_document=False,
             allow_cache=False,
         )

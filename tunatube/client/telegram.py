@@ -88,7 +88,7 @@ class TunaTubeBot:
             await self.client.send_file(
                 update.message.chat_id,
                 download_path,
-                caption=response_text,
+                caption=response_text.text,
                 reply_to_message=update.message.id,
                 thumb=tt.thumbnail_url,
             )
