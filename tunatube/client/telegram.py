@@ -88,7 +88,6 @@ class TunaTubeBot:
                 download_path,
                 caption=response_text.text,
                 reply_to_message=update.message.id,
-                thumb=tt.thumbnail_url,
             )
 
             os.remove(download_path)
