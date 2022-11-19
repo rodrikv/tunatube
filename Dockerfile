@@ -6,10 +6,6 @@ WORKDIR /code
 
 # setup
 RUN apt-get update
-RUN apt-get install -y \
-    python3 \
-    python3-dev
 RUN apt-get install -y ffmpeg
-RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 CMD [ "python3", "/code/main.py" ]

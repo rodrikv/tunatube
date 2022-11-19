@@ -1,6 +1,8 @@
+import os
 from typing import List
 from dataclasses import dataclass
-from pytube import YouTube, StreamQuery, Stream
+from pytube import YouTube, StreamQuery
+from tunatube.utils.video import call_ffmpeg
 from datetime import datetime
 
 
@@ -59,6 +61,12 @@ class TunaTube:
             rating=self.__yt.rating,
         )
 
+    def get_highest_mp4(self):
+        return self.streams.filter(file_extension="mp4").get_highest_resolution()
+
+    def get_highest_audio(self):
+        return self.streams.filter(only_audio=True).first()
+
     def download_hr(
         self,
         output_path: str = None,
@@ -68,15 +76,22 @@ class TunaTube:
         timeout: int = None,
         max_retries: int = 0,
     ):
-        hr = self.streams.get_highest_resolution()
-        path = None
-        if hr:
-            path = hr.download(
-                output_path,
-                filename,
-                filename_prefix,
-                skip_existing,
-                timeout,
-                max_retries,
-            )
+        audio = self.get_highest_audio()
+        video = self.get_highest_mp4()
+
+        title = video.title.replace(" ", "")
+        filename = f"{title}.mp4"
+        path = os.path.join(output_path, filename)
+
+        err, stdout = call_ffmpeg(
+            [
+                "-i",
+                video.download(output_path=output_path),
+                "-i",
+                audio.download(output_path=output_path),
+                "-c:v copy -c:a aac",
+                path,
+            ]
+        )
+
         return path
