@@ -62,7 +62,9 @@ class TunaTube:
         )
 
     def get_highest_mp4(self):
-        return self.streams.filter(file_extension="mp4").get_highest_resolution()
+        return self.streams.filter(
+            progressive=False, only_video=True, file_extension="mp4"
+        ).first()
 
     def get_highest_audio(self):
         return self.streams.filter(only_audio=True).first()
@@ -79,19 +81,24 @@ class TunaTube:
         audio = self.get_highest_audio()
         video = self.get_highest_mp4()
 
-        title = video.title.replace(" ", "")
-        filename = f"{title}.mp4"
+        filename = f"{video.title}.mp4"
         path = os.path.join(output_path, filename)
+
+        pv = video.download(filename_prefix="video")
+        pa = audio.download(filename_prefix="audio")
 
         err, stdout = call_ffmpeg(
             [
                 "-i",
-                video.download(output_path=output_path),
+                pv,
                 "-i",
-                audio.download(output_path=output_path),
-                "-c:v copy -c:a aac",
+                pa,
+                f"-c:v copy -c:a {audio.audio_codec}",
                 path,
             ]
         )
+
+        print(stdout)
+        print(err)
 
         return path
