@@ -1,11 +1,10 @@
 import os
-import logging
-
 
 from dataclasses import dataclass
 from tunatube.client.telethon import TunaTubeClient
 from tunatube.youtube import Resolution, TunaTube, YouTubeDescription
 from tunatube.utils.date import uploaded_at
+from tunatube.logger import get_logger
 
 from telegram import __version__ as TG_VER
 
@@ -27,11 +26,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TunaTubeBot:

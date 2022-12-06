@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from pytube import YouTube, StreamQuery
 from tunatube.utils.video import call_ffmpeg
 from datetime import datetime
+from tunatube.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Resolution(Enum):
@@ -125,13 +128,17 @@ class TunaTube:
         fn = hashlib.md5(video.title.encode("UTF-8")).hexdigest()
 
         filename = f"{fn}.mp4"
-        path = os.path.join(os.getcwd(), output_path, filename)
+        output = os.path.join(output_path, f"{fn}.mp4")
 
         pv = video.download(
-            filename_prefix="video", output_path=output_path, filename=filename,
+            filename_prefix="video",
+            output_path=output_path,
+            filename=filename,
         )
         pa = audio.download(
-            filename_prefix="audio", output_path=output_path, filename=filename,
+            filename_prefix="audio",
+            output_path=output_path,
+            filename=filename,
         )
 
         try:
@@ -141,11 +148,15 @@ class TunaTube:
                     pv,
                     "-i",
                     pa,
-                    f"-c:v copy -c:a copy",
-                    path,
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "copy",
+                    output,
                 ]
             )
+
         except Exception as e:
             return None, f"Error in ffmpeg: {e}"
 
-        return path, None
+        return output, None
