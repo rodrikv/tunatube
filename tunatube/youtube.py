@@ -1,9 +1,22 @@
 import os
+import hashlib
+
+from enum import Enum
 from typing import List
 from dataclasses import dataclass
 from pytube import YouTube, StreamQuery
 from tunatube.utils.video import call_ffmpeg
 from datetime import datetime
+
+
+class Resolution(Enum):
+    SD = "360p"
+    RD = "480p"
+    HD = "720p"
+    FHD = "1080p"
+    UHD = "2160p"
+    HIGHEST = "highest"
+    LOWEST = "lowest"
 
 
 @dataclass
@@ -66,11 +79,29 @@ class TunaTube:
             progressive=False, only_video=True, file_extension="mp4"
         ).first()
 
-    def get_highest_audio(self):
-        return self.streams.filter(only_audio=True).first()
+    def get_all_mp4(self):
+        return self.streams.filter(
+            progressive=False, only_video=True, file_extension="mp4"
+        )
 
-    def download_hr(
+    def get_highest_audio(self):
+        return (
+            self.streams.filter(only_audio=True, mime_type="audio/mp4")
+            .order_by("abr")
+            .last()
+        )
+
+    def get_resolution(self, resolution: str):
+        return self.streams.filter(
+            res=resolution, only_video=True, file_extension="mp4"
+        ).first()
+
+    def get_highest_resolution(self):
+        return self.streams.get_highest_resolution()
+
+    def download_resolution(
         self,
+        resolution: Resolution,
         output_path: str = None,
         filename: str = None,
         filename_prefix: str = None,
@@ -78,27 +109,43 @@ class TunaTube:
         timeout: int = None,
         max_retries: int = 0,
     ):
+
+        if resolution == Resolution.HIGHEST:
+            video = self.get_highest_mp4()
+        elif resolution == Resolution.LOWEST:
+            video = self.get_lowest_resolution()
+        else:
+            video = self.get_highest_resolution()
+
         audio = self.get_highest_audio()
-        video = self.get_highest_mp4()
 
-        filename = f"{video.title}.mp4"
-        path = os.path.join(output_path, filename)
+        if video is None:
+            return None, "Video resolution is not Valid"
 
-        pv = video.download(filename_prefix="video")
-        pa = audio.download(filename_prefix="audio")
+        fn = hashlib.md5(video.title.encode("UTF-8")).hexdigest()
 
-        err, stdout = call_ffmpeg(
-            [
-                "-i",
-                pv,
-                "-i",
-                pa,
-                f"-c:v copy -c:a {audio.audio_codec}",
-                path,
-            ]
+        filename = f"{fn}.mp4"
+        path = os.path.join(os.getenv("PWD"), output_path, filename)
+
+        pv = video.download(
+            filename_prefix="video", output_path=output_path, filename=filename,
+        )
+        pa = audio.download(
+            filename_prefix="audio", output_path=output_path, filename=filename,
         )
 
-        print(stdout)
-        print(err)
+        try:
+            process = call_ffmpeg(
+                [
+                    "-i",
+                    pv,
+                    "-i",
+                    pa,
+                    f"-c:v copy -c:a copy",
+                    path,
+                ]
+            )
+        except Exception as e:
+            return None, f"Error in ffmpeg: {e}"
 
-        return path
+        return path, None

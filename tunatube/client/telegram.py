@@ -4,7 +4,7 @@ import logging
 
 from dataclasses import dataclass
 from tunatube.client.telethon import TunaTubeClient
-from tunatube.youtube import TunaTube, YouTubeDescription
+from tunatube.youtube import Resolution, TunaTube, YouTubeDescription
 from tunatube.utils.date import uploaded_at
 
 from telegram import __version__ as TG_VER
@@ -69,7 +69,12 @@ class TunaTubeBot:
 
         tt = TunaTube(update.message.text)
 
-        download_path = tt.download_hr("./downloads")
+        download_path, _ = tt.download_resolution(Resolution.HIGHEST, "./downloads")
+
+        if _:
+            return await update.message.reply_text(
+                text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}"
+            )
 
         if not download_path:
             return await update.message.reply_text(
