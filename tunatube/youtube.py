@@ -151,7 +151,7 @@ class TunaTube:
                     "-map_metadata:s:v",
                     "0:s:v",
                     "-map_metadata:s:a",
-                    "0:s:a",
+                    "1:s:a",
                     "-c:v",
                     "copy",
                     "-c:a",
@@ -159,11 +159,13 @@ class TunaTube:
                     output,
                 ]
             )
+            logger.info(f"FFMPEG: {process.stdout.readlines()}")
+            logger.info(f"FFMPEG: {process.stderr.readlines()}")
 
         except Exception as e:
             return None, f"Error in ffmpeg: {e}"
 
-        os.remove(pv)
-        os.remove(pa)
+        # os.remove(pv)
+        # os.remove(pa)
 
         return output, None
