@@ -128,7 +128,7 @@ class TunaTube:
         fn = hashlib.md5(video.title.encode("UTF-8")).hexdigest()
 
         filename = f"{fn}.mp4"
-        output = os.path.join(output_path, f"{fn}.mp4")
+        output = os.path.join(os.getcwd(), output_path, f"{fn}.mp4")
 
         pv = video.download(
             filename_prefix="video",
