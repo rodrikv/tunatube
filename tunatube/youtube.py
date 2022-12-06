@@ -163,4 +163,7 @@ class TunaTube:
         except Exception as e:
             return None, f"Error in ffmpeg: {e}"
 
+        os.remove(pv)
+        os.remove(pa)
+
         return output, None
