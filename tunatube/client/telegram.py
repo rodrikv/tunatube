@@ -99,7 +99,7 @@ class TunaTubeBot:
 
         try:
             await self.client.send_file(
-                update.message.chat_id,
+                update.callback_query.chat_instance,
                 download_path,
                 caption=response_text.text,
                 reply_to_message=update.message.id,
