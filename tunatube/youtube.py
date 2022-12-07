@@ -8,6 +8,7 @@ from pytube import YouTube, StreamQuery
 from tunatube.utils.video import call_ffmpeg
 from datetime import datetime
 from tunatube.logger import get_logger
+from tunatube.utils import convert_size
 
 logger = get_logger(__name__)
 
@@ -65,6 +66,10 @@ class TunaTube:
         return self.__yt.thumbnail_url
 
     @property
+    def title(self):
+        return self.__yt.title
+
+    @property
     def description(self) -> YouTubeDescription:
         return YouTubeDescription(
             thumbnail_url=self.__yt.thumbnail_url,
@@ -76,6 +81,10 @@ class TunaTube:
             publish_date=self.__yt.publish_date,
             rating=self.__yt.rating,
         )
+
+    @staticmethod
+    def stream_repr(stream):
+        return f"[{stream.mime_type}] {stream.resolution} {convert_size(stream.filesize)}"
 
     def get_highest_mp4(self):
         return self.streams.filter(
@@ -118,7 +127,7 @@ class TunaTube:
         elif resolution == Resolution.LOWEST:
             video = self.get_lowest_resolution()
         else:
-            video = self.get_highest_resolution()
+            video = self.get_resolution(resolution=resolution)
 
         audio = self.get_highest_audio()
 
