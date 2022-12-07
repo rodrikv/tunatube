@@ -91,7 +91,7 @@ class TunaTubeBot:
         tt = TunaTube(youtube_url)
         download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
 
-        update.callback_query.answer(
+        await update.callback_query.answer(
             text="sending video"
         )
 
