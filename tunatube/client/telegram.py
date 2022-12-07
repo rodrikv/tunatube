@@ -84,21 +84,19 @@ class TunaTubeBot:
         download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
 
         if _:
-            return await update.message.reply_text(
+            return await context.bot.send_message(
                 text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}"
             )
 
         if not download_path:
-            return await update.message.reply_text(
+            return await context.bot.send_message(
                 text="Couldn't find the highest resolution :("
             )
-
-        await context.bot.delete_message(update.message.chat_id, update.message.id)
 
         response_text = GenericMessages.youtube_description(tt.description)
 
         try:
-            await update.message.reply_text(text=f"sending video please wait...")
+            await context.bot.send_message(text=f"sending video please wait...")
 
             await self.client.send_file(
                 update.message.chat_id,
@@ -109,7 +107,7 @@ class TunaTubeBot:
 
             os.remove(download_path)
         except Exception as e:
-            return await update.message.reply_text(
+            return await context.bot.send_message(
                 text=f"something bad happend couldn't send file!!!\nErrorMessage: {e}"
             )
 
