@@ -88,28 +88,16 @@ class TunaTubeBot:
 
     async def download(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, youtube_url, resolution = update.callback_query.data.split()
-        chat_id = update.callback_query.chat_instance.id
         tt = TunaTube(youtube_url)
         download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
 
-        if _:
-            return await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}",
-            )
-
-        if not download_path:
-            return await context.bot.send_message(
-                chat_id=chat_id, text="Couldn't find the highest resolution :("
-            )
+        update.callback_query.answer(
+            text="sending video"
+        )
 
         response_text = GenericMessages.youtube_description(tt.description)
 
         try:
-            await context.bot.send_message(
-                chat_id=chat_id, text=f"sending video please wait..."
-            )
-
             await self.client.send_file(
                 update.message.chat_id,
                 download_path,
@@ -119,10 +107,7 @@ class TunaTubeBot:
 
             os.remove(download_path)
         except Exception as e:
-            return await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"something bad happend couldn't send file!!!\nErrorMessage: {e}",
-            )
+            pass
 
     async def youtube_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
