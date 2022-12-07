@@ -20,11 +20,19 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
         f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
     )
 from telegram import ForceReply, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler,
+)
 
 logger = get_logger(__name__)
 
 filters.BaseFilter
+
 
 class TunaTubeBot:
     client: TunaTubeClient = None
@@ -80,23 +88,27 @@ class TunaTubeBot:
 
     async def download(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, youtube_url, resolution = update.callback_query.data.split()
+        chat_id = update.callback_query.chat_instance.id
         tt = TunaTube(youtube_url)
         download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
 
         if _:
             return await context.bot.send_message(
-                text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}"
+                chat_id=chat_id,
+                text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}",
             )
 
         if not download_path:
             return await context.bot.send_message(
-                text="Couldn't find the highest resolution :("
+                chat_id=chat_id, text="Couldn't find the highest resolution :("
             )
 
         response_text = GenericMessages.youtube_description(tt.description)
 
         try:
-            await context.bot.send_message(text=f"sending video please wait...")
+            await context.bot.send_message(
+                chat_id=chat_id, text=f"sending video please wait..."
+            )
 
             await self.client.send_file(
                 update.message.chat_id,
@@ -108,9 +120,9 @@ class TunaTubeBot:
             os.remove(download_path)
         except Exception as e:
             return await context.bot.send_message(
-                text=f"something bad happend couldn't send file!!!\nErrorMessage: {e}"
+                chat_id=chat_id,
+                text=f"something bad happend couldn't send file!!!\nErrorMessage: {e}",
             )
-
 
     async def youtube_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
