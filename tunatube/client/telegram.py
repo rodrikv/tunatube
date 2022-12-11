@@ -19,12 +19,11 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
         f"{TG_VER} version of this example, "
         f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
     )
-from telegram import ForceReply, Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
     ContextTypes,
-    MessageHandler,
     filters,
     CallbackQueryHandler,
 )
@@ -89,25 +88,41 @@ class TunaTubeBot:
     async def download(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, youtube_url, resolution = update.callback_query.data.split()
         tt = TunaTube(youtube_url)
-        download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
 
-        await update.callback_query.answer(
-            text="sending video"
-        )
+        await update.callback_query.answer(text="sending video")
+
+        download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
 
         response_text = GenericMessages.youtube_description(tt.description)
 
         try:
             await self.client.send_file(
-                update.callback_query.chat_instance,
+                update.effective_chat.id,
                 download_path,
                 caption=response_text.text,
-                reply_to_message=update.message.id,
             )
 
             os.remove(download_path)
         except Exception as e:
-            pass
+            logger.info(e)
+
+    async def audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        tt = TunaTube(update.message.text)
+
+        download_path, _ = tt.download_audio("./downloads")
+
+        response_text = GenericMessages.youtube_description(tt.description)
+
+        try:
+            await self.client.send_file(
+                update.effective_chat.id,
+                download_path,
+                caption=response_text.text,
+            )
+
+            os.remove(download_path)
+        except Exception as e:
+            logger.info(e)
 
     async def youtube_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE

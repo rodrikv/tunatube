@@ -28,7 +28,7 @@ class TunaTubeClient:
         chat_id: str,
         path: str,
         caption: str,
-        reply_to_message: int,
+        reply_to_message: int = None,
     ):
         if not self.is_active():
             await self.connect()
@@ -36,13 +36,17 @@ class TunaTubeClient:
         video_metadata = get_file_attributes(path)
         thumb = get_video_thumb(path)
 
-        return await self.client.send_file(
-            chat_id,
-            path,
+        kwargs = dict(
             reply_to=reply_to_message,
             caption=caption,
             force_document=False,
             allow_cache=False,
             attributes=video_metadata,
-            thumb=thumb
+            thumb=thumb,
+        )
+
+        return await self.client.send_file(
+            chat_id,
+            path,
+            **kwargs,
         )

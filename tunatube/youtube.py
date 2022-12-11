@@ -178,3 +178,20 @@ class TunaTube:
         os.remove(pa)
 
         return output, None
+
+    def download_audio(self, output_path: str = None, filename: str = None):
+        audio = self.get_highest_audio()
+
+        if audio is None:
+            return None, "Audio resolution is not Valid"
+
+        filename = f"{audio.title}.mp3"
+        output = os.path.join(os.getcwd(), output_path, f"{audio.title}.mp3")
+
+        audio.download(
+            filename_prefix="audio",
+            output_path=output_path,
+            filename=filename,
+        )
+
+        return output, None
