@@ -2,6 +2,7 @@ import os
 
 from dataclasses import dataclass
 from tunatube.client.telethon import TunaTubeClient
+from tunatube.utils import convert_size
 from tunatube.youtube import Resolution, TunaTube, YouTubeDescription
 from tunatube.utils.date import uploaded_at
 from tunatube.logger import get_logger
@@ -92,8 +93,11 @@ class TunaTubeBot:
         await update.callback_query.answer(text="sending video")
 
         download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
+        file_size = convert_size(os.path.getsize(download_path))
 
-        response_text = GenericMessages.youtube_description(tt.description)
+        response_text = GenericMessages.youtube_description(
+            tt.description, resolution=resolution, file_size=file_size
+        )
 
         try:
             await self.client.send_file(
@@ -182,12 +186,19 @@ class ResponseMessage:
 
 class GenericMessages:
     @classmethod
-    def youtube_description(cls, ytd: YouTubeDescription):
+    def youtube_description(
+        cls, ytd: YouTubeDescription, resolution: str = None, file_size: str = None
+    ):
         text = f"""<b>{ytd.title}</b>
 {'{:,}'.format(ytd.views)} views
 
 <b>{uploaded_at(ytd.publish_date)}</b>
         """
+
+        if resolution:
+            text += f"\n{resolution}"
+        if file_size:
+            text += f"\n{file_size}"
 
         return ResponseMessage(text=text, parse_mode="html")
 
