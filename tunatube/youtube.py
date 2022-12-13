@@ -192,7 +192,6 @@ class TunaTube:
         fn = self.__hash(audio.title)
 
         filename = f"{fn}.mp4"
-        output = os.path.join(os.getcwd(), output_path, f"{fn}.mp4")
 
         pa = audio.download(
             output_path=output_path,

@@ -4,4 +4,4 @@ __pycache__
 .env
 *.session
 downloads
-*.journal
+*journal

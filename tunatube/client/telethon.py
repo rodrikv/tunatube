@@ -62,7 +62,6 @@ class TunaTubeClient:
             caption=caption,
             force_document=False,
             allow_cache=False,
-            attributes=video_metadata,
         )
 
         return await self.client.send_file(
