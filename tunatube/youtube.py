@@ -86,30 +86,34 @@ class TunaTube:
     def stream_repr(stream, filesize):
         return f"[{stream.mime_type}] {stream.resolution} {convert_size(filesize)}"
 
-    def get_highest_mp4(self):
+    def get_highest_mp4(self) -> StreamQuery:
         return self.streams.filter(
             progressive=False, only_video=True, file_extension="mp4"
         ).first()
 
-    def get_all_mp4(self):
+    def get_all_mp4(self) -> StreamQuery:
         return self.streams.filter(
             progressive=False, only_video=True, file_extension="mp4"
         )
 
-    def get_highest_audio(self):
+    def get_highest_audio(self) -> StreamQuery:
         return (
             self.streams.filter(only_audio=True, mime_type="audio/mp4")
             .order_by("abr")
             .last()
         )
 
-    def get_resolution(self, resolution: str):
+    def get_resolution(self, resolution: str) -> StreamQuery:
         return self.streams.filter(
             res=resolution, only_video=True, file_extension="mp4"
         ).first()
 
-    def get_highest_resolution(self):
+    def get_highest_resolution(self) -> StreamQuery:
         return self.streams.get_highest_resolution()
+
+    @staticmethod
+    def __hash(name: str):
+        return hashlib.md5(name.encode("UTF-8")).hexdigest()
 
     def download_resolution(
         self,
@@ -134,7 +138,7 @@ class TunaTube:
         if video is None:
             return None, "Video resolution is not Valid"
 
-        fn = hashlib.md5(video.title.encode("UTF-8")).hexdigest()
+        fn = self.__hash(video.title)
 
         filename = f"{fn}.mp4"
         output = os.path.join(os.getcwd(), output_path, f"{fn}.mp4")
@@ -185,13 +189,26 @@ class TunaTube:
         if audio is None:
             return None, "Audio resolution is not Valid"
 
-        filename = f"{audio.title}.mp3"
-        output = os.path.join(os.getcwd(), output_path, f"{audio.title}.mp3")
+        fn = self.__hash(audio.title)
 
-        audio.download(
-            filename_prefix="audio",
+        filename = f"{fn}.mp4"
+        output = os.path.join(os.getcwd(), output_path, f"{fn}.mp4")
+
+        pa = audio.download(
             output_path=output_path,
             filename=filename,
         )
 
-        return output, None
+        pa_alternative = os.path.join(output_path, f"{fn}.mp3")
+
+        try:
+            process = call_ffmpeg(["-i", pa, "-q:a", "0", "-map", "a", pa_alternative])
+            logger.info(f"FFMPEG: {process.stdout.readlines()}")
+            logger.info(f"FFMPEG: {process.stderr.readlines()}")
+
+            os.remove(pa)
+
+        except Exception as e:
+            return None, "Error in ffmpeg: {e}"
+
+        return pa_alternative, None

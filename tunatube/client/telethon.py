@@ -23,7 +23,7 @@ class TunaTubeClient:
         if self.client:
             return self.client.is_connected()
 
-    async def send_file(
+    async def send_video(
         self,
         chat_id: str,
         path: str,
@@ -43,6 +43,26 @@ class TunaTubeClient:
             allow_cache=False,
             attributes=video_metadata,
             thumb=thumb,
+        )
+
+        return await self.client.send_file(
+            chat_id,
+            path,
+            **kwargs,
+        )
+
+    async def send_audio(
+        self, chat_id: str, path: str, caption: str, reply_to_message: int = None
+    ):
+        if not self.is_active():
+            await self.connect()
+
+        kwargs = dict(
+            reply_to=reply_to_message,
+            caption=caption,
+            force_document=False,
+            allow_cache=False,
+            attributes=video_metadata,
         )
 
         return await self.client.send_file(

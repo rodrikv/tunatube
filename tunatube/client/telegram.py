@@ -46,6 +46,7 @@ class TunaTubeBot:
         # on different commands - answer in Telegram
         application.add_handler(CommandHandler("ping", self.ping))
         application.add_handler(CommandHandler("youtube", self.youtube_command))
+        application.add_handler(CommandHandler("audio", self.audio))
         application.add_handler(CommandHandler("info", self.youtube_info))
         application.add_handler(CallbackQueryHandler(self.download))
 
@@ -72,7 +73,9 @@ class TunaTubeBot:
                     [
                         [
                             InlineKeyboardButton(
-                                text=TunaTube.stream_repr(stream, stream.filesize + audio_filesize),
+                                text=TunaTube.stream_repr(
+                                    stream, stream.filesize + audio_filesize
+                                ),
                                 callback_data=f"{update.message.text} {stream.resolution}",
                             )
                         ]
@@ -96,12 +99,12 @@ class TunaTubeBot:
         download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
         file_size = convert_size(os.path.getsize(download_path))
 
-        response_text = GenericMessages.youtube_description(
+        response_text = GenericMessages.youtube_video_description(
             tt.description, resolution=resolution, file_size=file_size
         )
 
         try:
-            await self.client.send_file(
+            await self.client.send_video(
                 update.effective_chat.id,
                 download_path,
                 caption=response_text.text,
@@ -116,13 +119,11 @@ class TunaTubeBot:
 
         download_path, _ = tt.download_audio("./downloads")
 
-        response_text = GenericMessages.youtube_description(tt.description)
-
         try:
-            await self.client.send_file(
+            await self.client.send_audio(
                 update.effective_chat.id,
                 download_path,
-                caption=response_text.text,
+                caption=tt.title,
             )
 
             os.remove(download_path)
@@ -160,12 +161,12 @@ class TunaTubeBot:
 
         await context.bot.delete_message(message.chat_id, message.id)
 
-        response_text = GenericMessages.youtube_description(tt.description)
+        response_text = GenericMessages.youtube_video_description(tt.description)
 
         try:
             await update.message.reply_text(text=f"sending video please wait...")
 
-            await self.client.send_file(
+            await self.client.send_video(
                 update.message.chat_id,
                 download_path,
                 caption=response_text.text,
@@ -187,7 +188,7 @@ class ResponseMessage:
 
 class GenericMessages:
     @classmethod
-    def youtube_description(
+    def youtube_video_description(
         cls, ytd: YouTubeDescription, resolution: str = None, file_size: str = None
     ):
         text = f"""<b>{ytd.title}</b>
@@ -200,6 +201,16 @@ class GenericMessages:
             text += f"\n{resolution}"
         if file_size:
             text += f"\n{file_size}"
+
+        return ResponseMessage(text=text, parse_mode="html")
+
+    @classmethod
+    def youtube_audio_description(cls, ytd: YouTubeDescription):
+        text = f"""<b>{ytd.title}</b>
+{'{:,}'.format(ytd.views)} views
+
+<b>{uploaded_at(ytd.publish_date)}</b>
+        """
 
         return ResponseMessage(text=text, parse_mode="html")
 
