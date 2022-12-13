@@ -63,6 +63,7 @@ class TunaTubeBot:
     ) -> None:
         try:
             tt = TunaTube(update.message.text)
+            audio_filesize = tt.get_highest_audio().filesize
             message = await context.bot.send_message(
                 update.message.chat.id,
                 text=f"<b>{tt.title}</b>",
@@ -71,7 +72,7 @@ class TunaTubeBot:
                     [
                         [
                             InlineKeyboardButton(
-                                text=TunaTube.stream_repr(stream),
+                                text=TunaTube.stream_repr(stream, stream.filesize + audio_filesize),
                                 callback_data=f"{update.message.text} {stream.resolution}",
                             )
                         ]

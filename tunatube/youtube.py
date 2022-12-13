@@ -83,8 +83,8 @@ class TunaTube:
         )
 
     @staticmethod
-    def stream_repr(stream):
-        return f"[{stream.mime_type}] {stream.resolution} {convert_size(stream.filesize)}"
+    def stream_repr(stream, filesize):
+        return f"[{stream.mime_type}] {stream.resolution} {convert_size(filesize)}"
 
     def get_highest_mp4(self):
         return self.streams.filter(
