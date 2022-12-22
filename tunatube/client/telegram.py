@@ -96,7 +96,16 @@ class TunaTubeBot:
 
         await update.callback_query.answer(text="sending video")
 
-        download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
+        try:
+            download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
+        except Exception as _:
+            pass
+
+        if _:
+            return await update.callback_query.answer(
+                text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}"
+            )
+
         file_size = convert_size(os.path.getsize(download_path))
 
         response_text = GenericMessages.youtube_video_description(
@@ -116,8 +125,15 @@ class TunaTubeBot:
 
     async def audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         tt = TunaTube(update.message.text)
+        try:
+            download_path, _ = tt.download_audio("./downloads")
+        except Exception as _:
+            pass
 
-        download_path, _ = tt.download_audio("./downloads")
+        if _:
+            return await update.message.reply_text(
+                text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}"
+            )
 
         try:
             await self.client.send_audio(
