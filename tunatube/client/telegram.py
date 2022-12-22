@@ -1,8 +1,9 @@
 import os
+import time
 
 from dataclasses import dataclass
 from tunatube.client.telethon import TunaTubeClient
-from tunatube.utils import convert_size
+from tunatube.utils import Callback, convert_size, size_verbose
 from tunatube.youtube import Resolution, TunaTube, YouTubeDescription
 from tunatube.utils.date import uploaded_at
 from tunatube.logger import get_logger
@@ -53,6 +54,52 @@ class TunaTubeBot:
         # Run the bot until the user presses Ctrl-C
         application.run_polling()
 
+    async def callback(
+        current,
+        total,
+        update=None,
+        context: ContextTypes.DEFAULT_TYPE = None,
+        message_to_edit=None,
+    ):
+        if not update or not context:
+            return
+
+        current_time = time.time()
+        if "previous_time" not in context.chat_data:
+            context.chat_data["previous_time"] = current_time
+        if message_to_edit is not None and current == total:
+            await context.bot.edit_message_text(
+                chat_id=update.message.chat_id,
+                message_id=message_to_edit.message_id,
+                text="Uploaded <pre>"
+                + size_verbose(current)
+                + "</pre>/<pre>"
+                + size_verbose(total)
+                + "</pre> --> {:.2f}".format(current / total * 100)
+                .rstrip("0")
+                .rstrip(".")
+                + "%",
+                parse_mode="html",
+            )
+            return
+        if current_time - context.chat_data["previous_time"] < 2:
+            return
+        context.chat_data["previous_time"] = current_time
+
+        if not message_to_edit:
+            return
+        await context.bot.edit_message_text(
+            chat_id=update.message.chat_id,
+            message_id=message_to_edit.message_id,
+            text="Uploaded <pre>"
+            + size_verbose(current)
+            + "</pre>/<pre>"
+            + size_verbose(total)
+            + "</pre> --> {:.2f}".format(current / total * 100).rstrip("0").rstrip(".")
+            + "%",
+            parse_mode="html",
+        )
+
     async def ping(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         _, text = update.message.text.split(maxsplit=1)
         await update.message.reply_html(
@@ -92,12 +139,15 @@ class TunaTubeBot:
 
     async def download(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, youtube_url, resolution = update.callback_query.data.split()
-        tt = TunaTube(youtube_url)
+        caller = Callback(self.callback, update=update, context=context)
+        tt = TunaTube(youtube_url, on_complete_callback=caller)
 
         await update.callback_query.answer(text="sending video")
 
         try:
-            download_path, _ = tt.download_resolution(resolution, output_path="./downloads")
+            download_path, _ = tt.download_resolution(
+                resolution, output_path="./downloads"
+            )
         except Exception as _:
             pass
 
@@ -124,7 +174,8 @@ class TunaTubeBot:
             logger.info(e)
 
     async def audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        tt = TunaTube(update.message.text)
+        caller = Callback(self.callback, update=update, context=context)
+        tt = TunaTube(update.message.text, on_complete_callback=caller)
         try:
             download_path, _ = tt.download_audio("./downloads")
         except Exception as _:
