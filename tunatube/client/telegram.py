@@ -54,6 +54,7 @@ class TunaTubeBot:
         # Run the bot until the user presses Ctrl-C
         application.run_polling()
 
+    @staticmethod
     async def callback(
         current,
         total,
@@ -61,9 +62,11 @@ class TunaTubeBot:
         context: ContextTypes.DEFAULT_TYPE = None,
         message_to_edit=None,
     ):
+        print(current, total, update, context, message_to_edit)
         if not update or not context:
             return
 
+        print('inja')
         current_time = time.time()
         if "previous_time" not in context.chat_data:
             context.chat_data["previous_time"] = current_time
@@ -139,8 +142,8 @@ class TunaTubeBot:
 
     async def download(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, youtube_url, resolution = update.callback_query.data.split()
-        caller = Callback(self.callback, update=update, context=context)
-        tt = TunaTube(youtube_url, on_complete_callback=caller)
+        caller = Callback(TunaTubeBot.callback, update=update, context=context)
+        tt = TunaTube(youtube_url)
 
         await update.callback_query.answer(text="sending video")
 
@@ -167,6 +170,7 @@ class TunaTubeBot:
                 update.effective_chat.id,
                 download_path,
                 caption=response_text.text,
+                progress_callback=caller
             )
 
             os.remove(download_path)
@@ -174,8 +178,8 @@ class TunaTubeBot:
             logger.info(e)
 
     async def audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        caller = Callback(self.callback, update=update, context=context)
-        tt = TunaTube(update.message.text, on_complete_callback=caller)
+        caller = Callback(TunaTubeBot.callback, update=update, context=context)
+        tt = TunaTube(update.message.text)
         try:
             download_path, _ = tt.download_audio("./downloads")
         except Exception as _:
@@ -191,6 +195,7 @@ class TunaTubeBot:
                 update.effective_chat.id,
                 download_path,
                 caption=tt.title,
+                progress_callback=caller
             )
 
             os.remove(download_path)
@@ -201,6 +206,7 @@ class TunaTubeBot:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """Send a message when the command /help is issued."""
+        message = None
 
         try:
             tt = TunaTube(update.message.text)
@@ -215,6 +221,13 @@ class TunaTubeBot:
             )
 
         download_path, _ = tt.download_resolution(Resolution.HIGHEST, "./downloads")
+
+        message_to_edit = await context.bot.send_message(
+            update.message.chat.id,
+            text="Uploading video\nPlease wait...",
+        )
+
+        caller = Callback(TunaTubeBot.callback, update=update, context=context, message_to_edit=message_to_edit)
 
         if _:
             return await update.message.reply_text(
@@ -238,6 +251,7 @@ class TunaTubeBot:
                 download_path,
                 caption=response_text.text,
                 reply_to_message=update.message.id,
+                progress_callback=caller
             )
 
             os.remove(download_path)

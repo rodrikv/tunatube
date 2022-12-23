@@ -1,3 +1,4 @@
+from typing import Callable
 from telethon import TelegramClient
 from tunatube.utils.video import *
 
@@ -8,7 +9,7 @@ class TunaTubeClient:
         self.__api_hash = api_hash
         self.__session = session
         self.__bot_token = bot_token
-        self.client = None
+        self.client: TelegramClient = None
 
     async def connect(self):
         self.client = TelegramClient(self.__session, self.__api_id, self.__api_hash)
@@ -29,6 +30,7 @@ class TunaTubeClient:
         path: str,
         caption: str,
         reply_to_message: int = None,
+        progress_callback: Callable = None,
     ):
         if not self.is_active():
             await self.connect()
@@ -43,6 +45,7 @@ class TunaTubeClient:
             allow_cache=False,
             attributes=video_metadata,
             thumb=thumb,
+            progress_callback=progress_callback,
         )
 
         return await self.client.send_file(
@@ -52,7 +55,7 @@ class TunaTubeClient:
         )
 
     async def send_audio(
-        self, chat_id: str, path: str, caption: str, reply_to_message: int = None
+        self, chat_id: str, path: str, caption: str, reply_to_message: int = None, progress_callback: Callable = None
     ):
         if not self.is_active():
             await self.connect()
