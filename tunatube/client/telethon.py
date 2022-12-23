@@ -65,6 +65,7 @@ class TunaTubeClient:
             caption=caption,
             force_document=False,
             allow_cache=False,
+            progress_callback=progress_callback,
         )
 
         return await self.client.send_file(
