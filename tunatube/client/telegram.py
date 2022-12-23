@@ -66,7 +66,7 @@ class TunaTubeBot:
         if not update or not context:
             return
 
-        print('inja')
+        print("inja")
         current_time = time.time()
         if "previous_time" not in context.chat_data:
             context.chat_data["previous_time"] = current_time
@@ -170,7 +170,7 @@ class TunaTubeBot:
                 update.effective_chat.id,
                 download_path,
                 caption=response_text.text,
-                progress_callback=caller
+                progress_callback=caller,
             )
 
             os.remove(download_path)
@@ -178,24 +178,35 @@ class TunaTubeBot:
             logger.info(e)
 
     async def audio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        caller = Callback(TunaTubeBot.callback, update=update, context=context)
         tt = TunaTube(update.message.text)
         try:
             download_path, _ = tt.download_audio("./downloads")
         except Exception as _:
             pass
 
+        message_to_edit = await context.bot.send_message(
+            update.message.chat.id,
+            text="Uploading audio\nPlease wait...",
+        )
+
         if _:
             return await update.message.reply_text(
                 text=f"something bad happend couldn't download file!!!\nErrorMessage: {_}"
             )
+
+        caller = Callback(
+            TunaTubeBot.callback,
+            update=update,
+            context=context,
+            message_to_edit=message_to_edit,
+        )
 
         try:
             await self.client.send_audio(
                 update.effective_chat.id,
                 download_path,
                 caption=tt.title,
-                progress_callback=caller
+                progress_callback=caller,
             )
 
             os.remove(download_path)
@@ -227,7 +238,12 @@ class TunaTubeBot:
             text="Uploading video\nPlease wait...",
         )
 
-        caller = Callback(TunaTubeBot.callback, update=update, context=context, message_to_edit=message_to_edit)
+        caller = Callback(
+            TunaTubeBot.callback,
+            update=update,
+            context=context,
+            message_to_edit=message_to_edit,
+        )
 
         if _:
             return await update.message.reply_text(
@@ -251,7 +267,7 @@ class TunaTubeBot:
                 download_path,
                 caption=response_text.text,
                 reply_to_message=update.message.id,
-                progress_callback=caller
+                progress_callback=caller,
             )
 
             os.remove(download_path)
